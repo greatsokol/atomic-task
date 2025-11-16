@@ -58,7 +58,7 @@ export class MasterForm implements OnInit {
     let total = Big(0);
     details.forEach(c => {
       try {
-        const price = new Big(c.price).round(2, Big.roundDown);
+        const price = this.roundBig(c.price);
         total = total.add(price);
       } catch (e) {
       }
@@ -146,6 +146,7 @@ export class MasterForm implements OnInit {
 
   protected saveDetail(detail: AbstractControl, showSuccess: boolean) {
     const value = detail.getRawValue();
+    value.price = this.roundBig(value.price).toString();
 
     if (!value['id']) {
       // деталь еще не сохранена, сохраняем через post-запрос
@@ -154,7 +155,7 @@ export class MasterForm implements OnInit {
     } else {
       // деталь уже сохранена, сохраняем через put-запрос
       firstValueFrom(this.#httpDetails.putDetail(this.id!, value, showSuccess))
-        .then(_ => detail.reset(value)
+        .then(data => detail.reset(data)
     )
       ;
     }
@@ -171,5 +172,9 @@ export class MasterForm implements OnInit {
   protected deleteDetail(detailId: string) {
     return firstValueFrom(this.#httpDetails.deleteDetail(this.id!, detailId))
       .then();
+  }
+
+  private roundBig(value: string) {
+    return Big(value).round(2, Big.roundDown);
   }
 }
