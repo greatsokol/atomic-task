@@ -1,5 +1,5 @@
 import {Component, inject, OnInit} from '@angular/core';
-import {MasterService} from '../../data/services/master.service';
+import {DetailService, MasterService} from '../../data/services';
 import {AbstractControl, FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -10,7 +10,6 @@ import {CustomValidators} from '../../validators';
 import {firstValueFrom} from 'rxjs';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {MatDivider} from '@angular/material/divider';
-import {DetailService} from '../../data/services/detail.service';
 
 
 @Component({
@@ -46,6 +45,7 @@ export class MasterForm implements OnInit {
 
   ngOnInit() {
     this.details.valueChanges.subscribe(details => this.calculateTotal(details));
+
     this.#ar.params.subscribe(params => {
       this.id = params['id'];
       if (this.id) {
@@ -57,11 +57,8 @@ export class MasterForm implements OnInit {
   private calculateTotal(details: DetailsResponseDto[]) {
     let total = Big(0);
     details.forEach(c => {
-      try {
-        const price = this.roundBig(c.price);
-        total = total.add(price);
-      } catch (e) {
-      }
+      const price = this.roundBig(c.price);
+      if (price) total = total.add(price);
     });
     this.form.patchValue({'total': total.toString()});
   }
@@ -109,7 +106,6 @@ export class MasterForm implements OnInit {
     if (this.form.disabled || this.form.invalid) return;
     this.form.markAllAsTouched();
     this.form.updateValueAndValidity();
-    console.debug('this.form.value', this.form.value);
 
     if (this.isAddMode()) {
       this.postMaster();
@@ -127,6 +123,8 @@ export class MasterForm implements OnInit {
   }
 
   protected postMaster() {
+    this.roundAllDetailsPrice();
+
     firstValueFrom(this.#httpMaster.postMaster(this.form.value))
       .then(value => {
         this.form.reset(value);
@@ -148,7 +146,7 @@ export class MasterForm implements OnInit {
 
   protected saveDetail(detail: AbstractControl, showSuccess: boolean) {
     const value = detail.getRawValue();
-    value.price = this.roundBig(value.price).toString();
+    value.price = this.roundBig(value.price)?.toString();
 
     if (!value['id']) {
       // деталь еще не сохранена, сохраняем через post-запрос
@@ -158,7 +156,7 @@ export class MasterForm implements OnInit {
       // деталь уже сохранена, сохраняем через put-запрос
       firstValueFrom(this.#httpDetails.putDetail(this.id!, value, showSuccess))
         .then(data => detail.reset(data)
-    )
+        )
       ;
     }
   }
@@ -172,11 +170,20 @@ export class MasterForm implements OnInit {
   }
 
   protected deleteDetail(detailId: string) {
-    return firstValueFrom(this.#httpDetails.deleteDetail(this.id!, detailId))
-      .then();
+    return firstValueFrom(this.#httpDetails.deleteDetail(this.id!, detailId));
+  }
+
+  private roundAllDetailsPrice() {
+    this.details.controls.forEach(detailControl =>
+      detailControl.value.price = this.roundBig(detailControl.value.price)?.toString()
+    );
   }
 
   private roundBig(value: string) {
-    return Big(value).round(2, Big.roundDown);
+    try {
+      return Big(value).round(2, Big.roundDown);
+    } catch (e) {
+      return null;
+    }
   }
 }
