@@ -91,7 +91,6 @@ export class MasterForm implements OnInit {
   protected removeDetailAt(i: number) {
     const detail = this.details.at(i);
     const detailId = detail.getRawValue().id;
-    debugger;
     if (detailId) {
       // деталь уже сохранена, удаляем на сервере и из структуры
       this.deleteDetail(detailId).then(_ => this.details.removeAt(i));
@@ -129,7 +128,10 @@ export class MasterForm implements OnInit {
 
   protected postMaster() {
     firstValueFrom(this.#httpMaster.postMaster(this.form.value))
-      .then(value => this.form.reset(value));
+      .then(value => {
+        this.form.reset(value);
+        this.id = value.id;
+      });
   }
 
   protected putMaster() {
