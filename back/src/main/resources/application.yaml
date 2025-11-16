@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: back
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:postgresql://localhost:5432/atomicmd
+    driver-class-name: org.postgresql.Driver
+    password: postgres
+    username: postgres
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db-changelog.xml
+
+server:
+  port: 8080
+
+
+
+
+

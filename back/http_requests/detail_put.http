@@ -1,0 +1,9 @@
+@masterId = 691cce6e-bdd5-4299-a2db-029ec927f2bd
+@detailId = 7ce4b639-4cae-4982-b989-08284ab8df92
+PUT http://localhost:8080/api/v1/master/{{masterId}}/detail/{{detailId}}
+Content-Type: application/json
+
+{
+  "name": "Наименование 10",
+  "price": "0.25"
+}

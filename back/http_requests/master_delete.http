@@ -1,0 +1,2 @@
+@masterId = 6cf5a0ee-3d54-4171-814f-fc16a76c3b5e
+DELETE http://localhost:8080/api/v1/master/{{masterId}}

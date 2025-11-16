@@ -1,0 +1,9 @@
+@masterId = 691cce6e-bdd5-4299-a2db-029ec927f2bd
+@detailId = f6b8633d-ba00-4085-a258-ef6cb300d872
+DELETE http://localhost:8080/api/v1/master/{{masterId}}/detail/{{detailId}}
+Content-Type: application/json
+
+{
+  "name": "Наименование 300",
+  "price": "10"
+}

@@ -1,0 +1,21 @@
+POST http://localhost:8080/api/v1/master
+Content-Type: application/json
+
+{
+  "number": 5,
+  "description": "Описание",
+  "details": [
+    {
+      "name": "Наименование 1",
+      "price": "20.25"
+    },
+    {
+      "name": "Наименование 2",
+      "price": "20.21"
+    },
+    {
+      "name": "Наименование 3",
+      "price": "20.22"
+    }
+  ]
+}

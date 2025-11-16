@@ -1,0 +1,2 @@
+@masterId = 691cce6e-bdd5-4299-a2db-029ec927f2bd
+GET http://localhost:8080/api/v1/master/{{masterId}}

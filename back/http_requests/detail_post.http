@@ -1,0 +1,8 @@
+@masterId = 691cce6e-bdd5-4299-a2db-029ec927f2bd
+POST http://localhost:8080/api/v1/master/{{masterId}}/detail
+Content-Type: application/json
+
+{
+  "name": "Наименование 10",
+  "price": "100020.25"
+}

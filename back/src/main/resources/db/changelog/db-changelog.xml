@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+<!--    <changeSet id="drop-table-detail" author="your_name">-->
+<!--        <dropTable tableName="detail" cascadeConstraints="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="drop-my-table" author="your_name">-->
+<!--        <dropTable tableName="master" cascadeConstraints="true"/>-->
+<!--    </changeSet>-->
+
+    <changeSet id="1762692669857-1" author="great">
+        <createTable tableName="detail" >
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_detail"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="master_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1762692669857-2" author="great">
+        <createTable tableName="master">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_master"/>
+            </column>
+            <column name="number" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total" type="DECIMAL">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1762692669857-3" author="great">
+        <addUniqueConstraint columnNames="name, master_id" constraintName="details_unique_constraint"
+                             tableName="detail"/>
+    </changeSet>
+    <changeSet id="1762692669857-4" author="great">
+        <addUniqueConstraint columnNames="number" constraintName="uc_master_number" tableName="master"/>
+    </changeSet>
+    <changeSet id="1762692669857-5" author="great">
+        <addForeignKeyConstraint baseColumnNames="master_id" baseTableName="detail" constraintName="FK_DETAIL_ON_MASTER"
+                                 referencedColumnNames="id" referencedTableName="master"/>
+    </changeSet>
+    <changeSet id="1762692669857-88" author="great">
+        <createTable tableName="audit" >
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_audit"/>
+            </column>
+            <column name="message" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="1762692669857-9" author="great">
+    <comment>Create a trigger function and the trigger</comment>
+        <createProcedure><![CDATA[
+    CREATE OR REPLACE FUNCTION update_master_total() RETURNS TRIGGER as $$
+        BEGIN
+        IF TG_OP IN ('INSERT', 'UPDATE') THEN
+            -- Пересчитываем сумму при добавлении или изменении записи
+        UPDATE master
+        SET total = (
+            SELECT COALESCE(SUM(price), 0)
+            FROM detail
+            WHERE master_id = NEW.master_id
+        )
+        WHERE id = NEW.master_id;
+        ELSIF TG_OP = 'DELETE' THEN
+            -- Обновляем сумму при удалении записи
+        UPDATE master
+        SET total = (
+            SELECT COALESCE(SUM(price), 0)
+            FROM detail
+            WHERE master_id = OLD.master_id
+        )
+        WHERE id = OLD.master_id;
+        END IF;
+        RETURN NULL; -- Возвращаем NULL, так как возвращаемое значение игнорируется
+    END;
+    $$ LANGUAGE plpgsql;
+
+       ]]></createProcedure>
+    </changeSet>
+    <changeSet id="1762692669857-7" author="great">
+        <comment>Create a trigger function and the trigger</comment>
+        <sql>
+            CREATE OR REPLACE TRIGGER after_insert_detail
+                AFTER INSERT ON detail FOR EACH ROW EXECUTE PROCEDURE update_master_total();
+            CREATE OR REPLACE TRIGGER after_update_detail
+                AFTER UPDATE OF price ON detail FOR EACH ROW EXECUTE PROCEDURE update_master_total();
+            CREATE OR REPLACE TRIGGER after_delete_detail
+                AFTER DELETE ON detail FOR EACH ROW EXECUTE PROCEDURE update_master_total();
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
