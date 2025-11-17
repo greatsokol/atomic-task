@@ -14,6 +14,7 @@ public class AuditServiceImpl implements AuditService {
 
     @Transactional
     public void saveAuditMessage(String message) {
-        auditRepository.save(new AuditEntity(message.substring(0, 255)));
+        if (message.length() > 255) message = message.substring(0, 255);
+        auditRepository.save(new AuditEntity(message));
     }
 }
